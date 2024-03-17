@@ -7,6 +7,7 @@ Redis server written in rust by following rust standard library.
 
 * ping
 nc localhost 6379
+
 ping
 +PONG
 
