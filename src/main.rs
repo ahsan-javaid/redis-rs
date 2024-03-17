@@ -1,25 +1,17 @@
-// Uncomment this block to pass the first stage
-use std::{ io::Write, net::TcpListener};
+use std::{ net::TcpListener};
+mod libs;
+use libs::stream_handler::StreamHandler;
 
 fn main() {
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
     println!("Logs from your program will appear here!");
-
-    // Uncomment this block to pass the first stage
     
     let listener = TcpListener::bind("127.0.0.1:6379").unwrap();
     
     for stream in listener.incoming() {
         match stream {
-            Ok(mut stream) => {
-                println!("accepted new connection");
-                let result = stream.write(b"+PONG\r\n");
-                
-                match result {
-                    Ok(bytes) => println!("bytes written: {bytes}"),
-                    Err(e) => println!("Error writing to stream, {:?}", e)
-                }
-                
+            Ok(stream) => {
+                let mut hander = StreamHandler::new(&stream);
+                hander.handle();
             }
             Err(e) => {
                 println!("error: {}", e);
