@@ -6,8 +6,13 @@ Redis server written in rust by following rust standard library.
 ### How to test
 
 * ping
+```
 nc localhost 6379
 
 ping
 +PONG
-
+```
+* parallel ping
+```
+echo -e "ping\nping" | redis-cli
+```

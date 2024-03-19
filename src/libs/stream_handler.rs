@@ -20,10 +20,23 @@ impl<'a> StreamHandler <'a> {
   }
 
   pub fn handle(&mut self) {
-    let input: String = self._read().ok().unwrap();
-    let output: RedisCmd = RedisCmd::from_str(input.as_str()).ok().unwrap();
+    loop {
+      let input: String = self._read().ok().unwrap();
+     
+      if input.len() == 0 {
+        break;
+      }
 
-    self._write(output);
+      for line in input.lines() {
+        if line.trim().len() > 0 {
+          let output: RedisCmd = RedisCmd::from_str(line.trim()).ok().unwrap();
+          match output {
+            RedisCmd::Ping => self._write(output),
+            RedisCmd::Unsupported => {}
+          }
+        }
+      }
+    }
   }
 
   pub fn _read(&mut self) -> Result<String> {
@@ -41,9 +54,9 @@ impl<'a> StreamHandler <'a> {
 
   pub  fn _write(&mut self, cmd: RedisCmd) {
      let response = cmd.response();
-     self.writer.write_all(response.as_bytes()).unwrap();
-     self.writer.flush().unwrap();
+     if response.len() > 0 {
+      self.writer.write_all(response.as_bytes()).unwrap();
+      self.writer.flush().unwrap();
+     }
   }
-
-
 }
