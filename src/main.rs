@@ -1,6 +1,7 @@
 use std::{ net::TcpListener};
 mod libs;
 use libs::stream_handler::StreamHandler;
+use std::thread;
 
 fn main() {
     println!("Logs from your program will appear here!");
@@ -10,8 +11,10 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                let mut hander = StreamHandler::new(&stream);
-                hander.handle();
+                thread::spawn(move || {
+                    let mut hander = StreamHandler::new(&stream);
+                    hander.handle();
+                });
             }
             Err(e) => {
                 println!("error: {}", e);
