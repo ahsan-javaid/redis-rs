@@ -16,3 +16,8 @@ ping
 ```
 echo -e "ping\nping" | redis-cli
 ```
+
+### How to run 
+```
+cargo run 
+```
