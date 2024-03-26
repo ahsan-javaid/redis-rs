@@ -21,3 +21,6 @@ echo -e "ping\nping" | redis-cli
 ```
 cargo run 
 ```
+
+### Tests
+To be added
