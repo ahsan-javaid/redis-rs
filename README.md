@@ -24,3 +24,6 @@ cargo run
 
 ### Tests
 To be added
+
+### Contributions
+Feel free to contribute and send pull request
