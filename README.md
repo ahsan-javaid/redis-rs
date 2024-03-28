@@ -27,3 +27,6 @@ To be added
 
 ### Contributions
 Feel free to contribute and send pull request
+
+### Architecture
+- Based on rust standard library
