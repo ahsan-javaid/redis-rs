@@ -5,16 +5,17 @@ use std:: {
   str:: FromStr
 };
 
-pub enum Value {
+pub enum Message {
   SimpleString(String),
   BulkSttring(String),
-  Array(Vec<Value>)
+  Array(Vec<Message>)
 }
-impl Value {
+
+impl Message {
   pub fn serialize(self) -> String {
     match self {
-      Value::SimpleString(s) => format!("+{}\r\n", s),
-      Value::BulkSttring(s) => format!("${}\r\n{}\r\n", s.chars().count(), s),
+      Message::SimpleString(s) => format!("+{}\r\n", s),
+      Message::BulkSttring(s) => format!("${}\r\n{}\r\n", s.len(), s),
       _ => panic!("unsupported value for serialize")
     }
   }
@@ -34,6 +35,23 @@ impl<'a> StreamHandler <'a> {
   }
 
   pub fn handle(&mut self) {
+
+    // new code 
+    loop {
+      let input_value: String = self._read().ok().unwrap();
+      
+      if input_value.len() == 0 {
+        break;
+      }
+
+      let response = parse_message(input_value);
+
+      self._write_v2(response);
+    }
+
+
+
+    /// old code
     loop {
       let values: Vec<String> = Vec::new();
 
@@ -47,6 +65,7 @@ impl<'a> StreamHandler <'a> {
       for line in input.lines() {
         if line.trim().len() > 0 {
 
+           // *2\r\n$4\r\necho\r\n$3\r\nhey\r\n
           // parser start 
           match line.chars().next().unwrap() {
             '+' => {
@@ -122,4 +141,40 @@ impl<'a> StreamHandler <'a> {
       self.writer.flush().unwrap();
      }
   }
+
+  pub fn _write_v2(&mut self, val: String) {
+    self.writer.write_all(val.as_bytes()).unwrap();
+    self.writer.flush().unwrap();
+  }
+}
+
+fn parse_message(input: String) -> Result<Message> {
+  match input.chars().next().unwrap() {
+    '+' => parse_simple_string(input),
+    '*' => parse_simple_string(input),
+    '$' => parse_simple_string(input),
+    _ => panic!("error")
+  }
+}
+
+fn read_until_crlf(input: String) -> Option<String> {
+   let line = input.lines().next();
+   
+   match line {
+    Some(v) => {
+      return Some(v[1..].into());
+    },
+    None => {
+      return None;
+    }
+   }
+}
+
+fn parse_simple_string(input: String) -> Result<Message> {
+  if let Some(v) = read_until_crlf(input) {
+   
+    return Ok(Message::SimpleString(v));
+  } 
+
+  return Err("invlid string");
 }
