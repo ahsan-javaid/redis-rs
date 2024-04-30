@@ -6,7 +6,7 @@ use std:: {
 };
 use std::io::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Message {
   SimpleString(String),
   BulkString(String),
@@ -18,6 +18,18 @@ impl Message {
     match self {
       Message::SimpleString(s) => format!("+{}\r\n", s),
       Message::BulkString(s) => format!("${}\r\n{}\r\n", s.len(), s),
+      Message::Array(arr) => {
+        let mut s = String::from(format!("*{}\r\n", arr.len()));
+
+        arr.iter().for_each(|x| {
+          
+          let sj = x.clone().serialize();
+
+          s.push_str(sj.as_str());
+        });
+
+        return s;
+      }
       _ => panic!("unsupported value for serialize")
     }
   }
@@ -178,7 +190,7 @@ fn parse_message(input: String) -> Result<Message> {
   }
 }
 
-fn read_until_crlf(input: String) -> Option<String> {
+pub fn read_until_crlf(input: String) -> Option<String> {
    let line = input.lines().next();
    
    match line {
@@ -210,12 +222,12 @@ fn parse_array(input: String) -> Result<Message> {
 
     let mut items: Vec<Message> = vec![];
 
-    for (i, line) in input.lines().enumerate() {
-      if i > 0 {
-        let result = parse_message(line.to_string());
+    for (_, line) in input.lines().skip(1).enumerate() {
+      
+      println!("line: {:?}", line);
+      let result = parse_message(line.to_string());
 
-        items.push(result.unwrap());
-      }
+      items.push(result.unwrap());
 
     }
 

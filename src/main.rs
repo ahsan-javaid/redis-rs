@@ -1,5 +1,6 @@
 use std::{ net::TcpListener};
 mod libs;
+mod tests;
 use libs::stream_handler::StreamHandler;
 use std::thread;
 
