@@ -19,9 +19,9 @@ impl Message {
       Message::SimpleString(s) => format!("+{}\r\n", s),
       Message::BulkString(s) => format!("${}\r\n{}\r\n", s.len(), s),
       Message::Array(arr) => {
-        let mut s = String::from(format!("*{}\r\n", arr.len()));
+        let mut s = String::from(format!(""));
 
-        arr.iter().for_each(|x| {
+        arr.iter().skip(1).for_each(|x| {
           
           let sj = x.clone().serialize();
 
@@ -58,7 +58,11 @@ impl<'a> StreamHandler <'a> {
         break;
       }
 
-      let output: RedisCmd = RedisCmd::from_str(input_value.lines().next().unwrap()).ok().unwrap();
+      println!("input check: {:?}", input_value.as_str());
+
+      let output: RedisCmd = RedisCmd::from_str(input_value.as_str()).ok().unwrap();
+
+      println!("output {:?}", output);
 
       match output {
         RedisCmd::Ping => self._write_v2("+PONG\r\n".to_string()),
@@ -72,12 +76,12 @@ impl<'a> StreamHandler <'a> {
                self._write_v2(v.serialize())
             },
             Err(_) => {
-              println!("Cannot write anything to output")
+              println!("Cannot write anything to output 1")
             }
           }
         },
         _ => {
-          println!("Cannot write anything to output")
+          println!("Cannot write anything to output 2")
         }
       }
     }
@@ -181,7 +185,7 @@ impl<'a> StreamHandler <'a> {
   }
 }
 
-fn parse_message(input: String) -> Result<Message> {
+pub fn parse_message(input: String) -> Result<Message> {
   match input.chars().next().unwrap() {
     '+' => parse_simple_string(input),
     '*' => parse_array(input),
@@ -214,24 +218,29 @@ fn parse_simple_string(input: String) -> Result<Message> {
 
 fn parse_array(input: String) -> Result<Message> {
   // *2\r\n$5\r\nhello\r\n$5\r\nworld\r\n
+  // *2\r\n$4\r\necho\r\n$3\r\nhey\r\n
   if let Some(v) = read_until_crlf(input.clone()) {
     let num_str = v.trim();
 
     let arr_len = num_str.parse::<i64>();
-
-
+    println!("llop {:?}", arr_len);
+    // Convert the lines into a vector of owned strings
+    let lines: Vec<String> = input.lines().map(String::from).collect();
+    println!("lines {:?}", lines);
     let mut items: Vec<Message> = vec![];
 
-    for (_, line) in input.lines().skip(1).enumerate() {
+    let mut inc = 0;
+    for cursor in 0..arr_len.unwrap() {
+             
+      let x = format!("{}\r\n{}", lines[cursor as usize + 1 + inc], lines[cursor as usize + 2 + inc]);
+      println!("{} yoyo, {:?}", cursor, x);
+      let result = parse_message(x);
+    
+      println!("check this output: {:?}", result);
       
-      println!("line: {:?}", line);
-      let result = parse_message(line.to_string());
-
       items.push(result.unwrap());
-
+      inc = inc + 1;
     }
-
-   
     return Ok(Message::Array(items));
   } 
 
