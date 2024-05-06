@@ -17,6 +17,12 @@ ping
 echo -e "ping\nping" | redis-cli
 ```
 
+* echo
+
+```
+*2\r\n$4\r\necho\r\n$3\r\nhey\r\n
+```
+
 ### How to run 
 ```
 cargo run 
