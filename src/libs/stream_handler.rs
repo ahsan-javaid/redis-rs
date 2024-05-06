@@ -19,7 +19,7 @@ impl Message {
       Message::SimpleString(s) => format!("+{}\r\n", s),
       Message::BulkString(s) => format!("${}\r\n{}\r\n", s.len(), s),
       Message::Array(arr) => {
-        let mut s = String::from(format!(""));
+        let mut s = String::from("");
 
         arr.iter().skip(1).for_each(|x| {
           
@@ -49,8 +49,6 @@ impl<'a> StreamHandler <'a> {
   }
 
   pub fn handle(&mut self) {
-
-    // new code 
     loop {
       let input_value: String = self._read().ok().unwrap();
       
@@ -58,104 +56,26 @@ impl<'a> StreamHandler <'a> {
         break;
       }
 
-      println!("input check: {:?}", input_value.as_str());
-
       let output: RedisCmd = RedisCmd::from_str(input_value.as_str()).ok().unwrap();
 
-      println!("output {:?}", output);
-
       match output {
-        RedisCmd::Ping => self._write_v2("+PONG\r\n".to_string()),
+        RedisCmd::Ping => self._write("+PONG\r\n".to_string()),
         RedisCmd::Echo => {
           let response = parse_message(input_value.clone());
           match response {
             Ok(v) => {
-              println!("value: {:?}", v);
-              println!("response: {:?}", v);
-
-               self._write_v2(v.serialize())
+               self._write(v.serialize())
             },
             Err(_) => {
-              println!("Cannot write anything to output 1")
+              println!("Cannot write anything to output")
             }
           }
         },
         _ => {
-          println!("Cannot write anything to output 2")
+          println!("Unsupported redis command")
         }
       }
     }
-
-
-
-    // old code
-    // loop {
-    //   let values: Vec<String> = Vec::new();
-
-    //   let input: String = self._read().ok().unwrap();
-     
-    //   if input.len() == 0 {
-    //     break;
-    //   }
-      
-
-    //   for line in input.lines() {
-    //     if line.trim().len() > 0 {
-
-    //        // *2\r\n$4\r\necho\r\n$3\r\nhey\r\n
-    //       // parser start 
-    //       match line.chars().next().unwrap() {
-    //         '+' => {
-    //           // parse simple strings
-
-    //           let mut temp: String = String::from(line.to_string());
-
-    //           // remove + sign
-    //           temp.remove(0);
-
-    //           let parsed_value = Value::SimpleString(temp);
-    //           // write back result
-    //         }
-    //         '*' => {
-    //           // parse arrays
-
-    //         }
-    //         '$' => {
-    //           // parse bulk strings
-
-    //         }
-    //         _ => {
-    //           // panic
-    //         }
-    //       }
-    //       // parser end
-
-    //       let output: RedisCmd = RedisCmd::from_str(line.trim()).ok().unwrap();
-
-    //       match output {
-    //         RedisCmd::Ping => self._write(output),
-    //         RedisCmd::Echo => {
-    //           //  "*2\r\n$4\r\necho\r\n$9\r\nraspberry\r\n"
-    //           // process echo 
-    //           loop {
-    //             let input: String = self._read().ok().unwrap();
-     
-    //             if input.len() == 0 {
-    //               break;
-    //             }
-    //             for l in input.lines() {
-
-    //               let resp = format!("$3\r\n{l}\r\n");
-    //               self.writer.write_all(resp.as_bytes()).unwrap();
-    //               self.writer.flush().unwrap();
-    //             }
-    //           }
-    //         }
-    //         RedisCmd::Unsupported => {}
-    //       }
-    //     }
-    //   }
-    // }
   }
 
   pub fn _read(&mut self) -> Result<String> {
@@ -171,15 +91,7 @@ impl<'a> StreamHandler <'a> {
     })
   }
 
-  pub  fn _write(&mut self, cmd: RedisCmd) {
-     let response = cmd.response();
-     if response.len() > 0 {
-      self.writer.write_all(response.as_bytes()).unwrap();
-      self.writer.flush().unwrap();
-     }
-  }
-
-  pub fn _write_v2(&mut self, val: String) {
+  pub fn _write(&mut self, val: String) {
     self.writer.write_all(val.as_bytes()).unwrap();
     self.writer.flush().unwrap();
   }
@@ -217,27 +129,20 @@ fn parse_simple_string(input: String) -> Result<Message> {
 }
 
 fn parse_array(input: String) -> Result<Message> {
-  // *2\r\n$5\r\nhello\r\n$5\r\nworld\r\n
-  // *2\r\n$4\r\necho\r\n$3\r\nhey\r\n
   if let Some(v) = read_until_crlf(input.clone()) {
     let num_str = v.trim();
 
     let arr_len = num_str.parse::<i64>();
-    println!("llop {:?}", arr_len);
     // Convert the lines into a vector of owned strings
     let lines: Vec<String> = input.lines().map(String::from).collect();
-    println!("lines {:?}", lines);
     let mut items: Vec<Message> = vec![];
 
     let mut inc = 0;
     for cursor in 0..arr_len.unwrap() {
              
       let x = format!("{}\r\n{}", lines[cursor as usize + 1 + inc], lines[cursor as usize + 2 + inc]);
-      println!("{} yoyo, {:?}", cursor, x);
       let result = parse_message(x);
-    
-      println!("check this output: {:?}", result);
-      
+          
       items.push(result.unwrap());
       inc = inc + 1;
     }
@@ -248,13 +153,11 @@ fn parse_array(input: String) -> Result<Message> {
 }
 
 fn parse_bulk_string(input: String) -> Result<Message> {
-  // *2\r\n$5\r\nhello\r\n$5\r\nworld\r\n
   if let Some(v) = read_until_crlf(input.clone()) {
     let num_str = v.trim();
 
-    let bulk_len = num_str.parse::<i64>();
+    let _ = num_str.parse::<i64>();
 
-    print!("bulk_len {:?}", bulk_len);
     for (i, line) in input.lines().enumerate() {
       if i > 0 {
         return Ok(Message::BulkString(line.to_string()));
