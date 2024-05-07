@@ -31,4 +31,10 @@ mod tests {
 
     assert_eq!(result.serialize(), input);
   }
+
+  #[test]
+  fn test_get_set_message() {
+    //"*3\r\n$3\r\nSET\r\n$5\r\ngrape\r\n$6\r\nbanana\r\n"
+    unimplemented!();
+  }
 }

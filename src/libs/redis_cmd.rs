@@ -4,6 +4,8 @@ use std::str::FromStr;
 pub enum RedisCmd {
   Ping,
   Echo,
+  SET,
+  GET,
   Unsupported
 }
 
@@ -15,6 +17,10 @@ impl FromStr for RedisCmd {
       Ok(RedisCmd::Ping)
     } else if input.to_lowercase().contains("echo") {
       Ok(RedisCmd::Echo)
+    } else if input.to_lowercase().contains("get") {
+      Ok(RedisCmd::GET) 
+    } else if input.to_lowercase().contains("set") {
+      Ok(RedisCmd::SET)
     } else {
       Ok(RedisCmd::Unsupported)
     }

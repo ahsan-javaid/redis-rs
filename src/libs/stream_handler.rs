@@ -2,9 +2,12 @@ use crate::libs::redis_cmd::RedisCmd;
 use std:: {
   io:: { BufRead, BufReader, BufWriter, Result, Write },
   net:: { TcpStream },
-  str:: FromStr,
+  str:: FromStr, hash::Hash,
 };
 use std::io::Error;
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
+
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -48,7 +51,7 @@ impl<'a> StreamHandler <'a> {
     }
   }
 
-  pub fn handle(&mut self) {
+  pub fn handle(&mut self, store: &Arc<Mutex<HashMap<String, String>>>) {
     loop {
       let input_value: String = self._read().ok().unwrap();
       
@@ -71,7 +74,65 @@ impl<'a> StreamHandler <'a> {
             }
           }
         },
-        _ => {
+       RedisCmd::GET => {
+        let response = parse_message(input_value.clone());
+        println!("get msg: {:?}", response);
+        match response {
+          Ok(v) => {
+            let mut key_values = vec![];
+            if let Message::Array(ref arr) = v {
+              arr.iter().skip(1).for_each(|x| {
+                if let Message::BulkString(blk) = x {
+                  key_values.push(blk);
+                }
+              })
+            }
+            
+            let mut map = store.lock().unwrap();
+
+            if map.contains_key(key_values[0]) {
+              let val = map.get(key_values[0]).unwrap();
+              self._write(format!("${}\r\n{}\r\n", val.len(), val));
+            } else {
+              self._write("$-1\r\n".to_string());
+            }
+
+            self._write(v.serialize());
+          },
+          Err(_) => {
+            println!("Cannot write anything to output")
+          }
+        }
+       },
+       RedisCmd::SET => {
+        let response = parse_message(input_value.clone());
+        // set msg: Ok(Array([BulkString("SET"), BulkString("grape"), BulkString("banana")]))
+        match response {
+          Ok(v) => {
+            let mut key_values = vec![];
+            if let Message::Array(ref arr) = v {
+              arr.iter().skip(1).for_each(|x| {
+                if let Message::BulkString(blk) = x {
+                  key_values.push(blk);
+                }
+              })
+            }
+
+            let mut map = store.lock().unwrap();
+
+            if !map.contains_key(key_values[0]) {
+              map.insert(key_values[0].clone(), key_values[1].clone());
+            }
+
+            self._write("+OK\r\n".to_string());
+          },
+          Err(_) => {
+            println!("Cannot write anything to output")
+          }
+        }
+       }
+       , 
+       _ => {
           println!("Unsupported redis command")
         }
       }
