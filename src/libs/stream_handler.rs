@@ -7,7 +7,7 @@ use std:: {
 use std::io::Error;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
-
+use std::time::{SystemTime, Duration};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -51,7 +51,7 @@ impl<'a> StreamHandler <'a> {
     }
   }
 
-  pub fn handle(&mut self, store: &Arc<Mutex<HashMap<String, String>>>) {
+  pub fn handle(&mut self, store: &Arc<Mutex<HashMap<String, (String, Option<SystemTime>)>>>) {
     loop {
       let input_value: String = self._read().ok().unwrap();
       
@@ -92,12 +92,25 @@ impl<'a> StreamHandler <'a> {
 
             if map.contains_key(key_values[0]) {
               let val = map.get(key_values[0]).unwrap();
-              self._write(format!("${}\r\n{}\r\n", val.len(), val));
+
+              // check expiry
+              match val.1 {
+                Some(j) => {
+                  if j > SystemTime::now() {
+                    // valid
+                    self._write(format!("${}\r\n{}\r\n", val.0.len(), val.0));
+                  } else {
+                    map.remove(key_values[0]);
+                    self._write("$-1\r\n".to_string());
+                  }
+                },
+                None => {
+                  self._write(format!("${}\r\n{}\r\n", val.0.len(), val.0));
+                }
+              }
             } else {
               self._write("$-1\r\n".to_string());
             }
-
-            self._write(v.serialize());
           },
           Err(_) => {
             println!("Cannot write anything to output")
@@ -106,7 +119,6 @@ impl<'a> StreamHandler <'a> {
        },
        RedisCmd::SET => {
         let response = parse_message(input_value.clone());
-        // set msg: Ok(Array([BulkString("SET"), BulkString("grape"), BulkString("banana")]))
         match response {
           Ok(v) => {
             let mut key_values = vec![];
@@ -121,7 +133,21 @@ impl<'a> StreamHandler <'a> {
             let mut map = store.lock().unwrap();
 
             if !map.contains_key(key_values[0]) {
-              map.insert(key_values[0].clone(), key_values[1].clone());
+
+
+              if key_values.get(2) != None { // px
+                let raw_time = key_values.get(3).unwrap();
+                let time_int = raw_time.parse::<u64>();
+
+                let expiry_time = SystemTime::now() + Duration::from_millis(time_int.unwrap());
+
+                map.insert(key_values[0].clone(), (key_values[1].clone(), Some(expiry_time)));
+
+              } else {
+                map.insert(key_values[0].clone(), (key_values[1].clone(), None));
+
+              }
+
             }
 
             self._write("+OK\r\n".to_string());
