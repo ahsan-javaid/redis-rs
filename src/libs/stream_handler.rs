@@ -157,7 +157,18 @@ impl<'a> StreamHandler <'a> {
           }
         }
        }
-       , 
+       ,
+       RedisCmd::Info => { 
+        let response = parse_message(input_value.clone());
+        match response {
+          Ok(v) => {
+            self._write("$11\r\nrole:master\r\n".to_string());
+          },
+          Err(_) => {
+            println!("Cannot write anything to output")
+          }
+        }
+       }, 
        _ => {
           println!("Unsupported redis command")
         }
