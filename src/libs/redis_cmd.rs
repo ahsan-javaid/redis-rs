@@ -6,6 +6,7 @@ pub enum RedisCmd {
   Echo,
   SET,
   GET,
+  Info,
   Unsupported
 }
 
@@ -21,6 +22,8 @@ impl FromStr for RedisCmd {
       Ok(RedisCmd::GET) 
     } else if input.to_lowercase().contains("set") {
       Ok(RedisCmd::SET)
+    } else if input.to_lowercase().contains("info") {
+      Ok(RedisCmd::Info)
     } else {
       Ok(RedisCmd::Unsupported)
     }
