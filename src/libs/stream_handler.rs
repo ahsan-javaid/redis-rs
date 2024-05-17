@@ -8,6 +8,7 @@ use std::io::Error;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use std::time::{SystemTime, Duration};
+use std::env;
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -162,7 +163,16 @@ impl<'a> StreamHandler <'a> {
         let response = parse_message(input_value.clone());
         match response {
           Ok(v) => {
-            self._write("$11\r\nrole:master\r\n".to_string());
+            let args: Vec<String> = env::args().collect();
+           
+            let reply = if let Some(_) = args.iter().position(|x| x.contains("replicaof")) {
+               "role:slave"
+            } else {
+               "role:master" 
+            };
+            
+            
+            self._write(format!("${}\r\n{}\r\n", reply.len(), reply));
           },
           Err(_) => {
             println!("Cannot write anything to output")
