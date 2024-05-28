@@ -11,7 +11,6 @@ use std::env;
 
 fn main() {
     println!("Logs from your program will appear here!");
-
     // env //
     let args: Vec<String> = env::args().collect();
     let mut port_num = "6379".to_string();
