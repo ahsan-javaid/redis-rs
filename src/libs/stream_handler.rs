@@ -171,8 +171,11 @@ impl<'a> StreamHandler <'a> {
                "role:master" 
             };
             
+            // hardcoded values
+            let replica = "master_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
+            let offset = "master_repl_offset:0";
             
-            self._write(format!("${}\r\n{}\r\n", reply.len(), reply));
+            self._write(format!("${}\r\n{}{}{}\r\n", reply.len() + replica.len() + offset.len(), reply, replica, offset));
           },
           Err(_) => {
             println!("Cannot write anything to output")
