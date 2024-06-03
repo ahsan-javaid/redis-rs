@@ -36,3 +36,6 @@ Feel free to contribute and send pull request
 
 ### Architecture
 - Based on rust standard library
+
+### Unit tests
+Add unit tests
