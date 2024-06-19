@@ -52,7 +52,9 @@ impl<'a> StreamHandler <'a> {
     }
   }
 
-  pub fn handle(&mut self, store: &Arc<Mutex<HashMap<String, (String, Option<SystemTime>)>>>) {
+  pub fn handle(&mut self, store: &Arc<Mutex<HashMap<String, (String, Option<SystemTime>)>>>,
+  config: &Arc<Mutex<HashMap<String, String>>>
+  ) {
     loop {
       let input_value: String = self._read().ok().unwrap();
       
