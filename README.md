@@ -39,3 +39,6 @@ Feel free to contribute and send pull request
 
 ### Unit tests
 Add unit tests
+- redis cmd
+- stream handler
+- main 

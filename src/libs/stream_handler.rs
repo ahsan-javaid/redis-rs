@@ -159,8 +159,28 @@ impl<'a> StreamHandler <'a> {
             println!("Cannot write anything to output")
           }
         }
-       }
-       ,
+       },
+       RedisCmd::Config => {
+        let response = parse_message(input_value.clone());
+
+        match response {
+          Ok(v) => {
+            // check if its get dir or dbfilename
+            let res = format!(
+              "*2\r\n${}\r\n{}\r\n${}\r\n{}\r\n",
+              "key".len(),
+              "value",
+              "value".len(),
+              "value"
+          );
+          
+          self._write(res);
+          },
+          Err(_) => {
+            println!("Cannot write anything to output")
+          }
+        }
+       },
        RedisCmd::Info => { 
         let response = parse_message(input_value.clone());
         match response {
