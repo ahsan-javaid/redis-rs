@@ -1,5 +1,6 @@
-use std::{ net::TcpListener};
+use std::{ net::TcpListener, net::TcpStream, io::{Write} };
 mod libs;
+mod utils;
 mod tests;
 use libs::stream_handler::StreamHandler;
 use std::thread;
@@ -35,6 +36,17 @@ fn main() {
             dbfilename = args[index + 1].clone();
         }
     }
+    // parse replica
+    let _role = if let Some((host, port)) = utils::parser::parse_replica(&args) {
+        let mut stream = TcpStream::connect(format!("{}:{}", host, port))
+        .expect("failed to connect to master server");
+
+        stream.write_all(b"*1\r\n$4\r\nping\r\n").expect("failed to ping master server");
+
+        "slave"
+    } else {
+        "master"
+    };
 
     // config handling
 
