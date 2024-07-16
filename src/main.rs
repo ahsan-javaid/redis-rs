@@ -19,10 +19,8 @@ fn main() {
     let mut dir = "".to_string();
     let mut dbfilename = "".to_string();
 
-    if let Some(index) = args.iter().position(|x| x.contains("port")) {
-        if index < args.len() - 1 {
-            port_num = args[index + 1].clone();
-        }
+    if let Some(port) = utils::parser::parse_port(&args) {
+        port_num = port;
     }
 
     if let Some(index) = args.iter().position(|x| x.contains("dir")) {
