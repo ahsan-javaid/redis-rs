@@ -19,23 +19,20 @@ fn main() {
     let mut dir = "".to_string();
     let mut dbfilename = "".to_string();
 
-    if let Some(port) = utils::parser::parse_port(&args) {
+    if let Some(port) = utils::parser::parse_single_arg(&args, "--port") {
         port_num = port;
     }
 
-    if let Some(index) = args.iter().position(|x| x.contains("dir")) {
-        if index < args.len() - 1 {
-            dir = args[index + 1].clone();
-        }
+    if let Some(dir_path) = utils::parser::parse_single_arg(&args, "--dir") {
+        dir = dir_path;
     }
 
-    if let Some(index) = args.iter().position(|x| x.contains("dbfilename")) {
-        if index < args.len() - 1 {
-            dbfilename = args[index + 1].clone();
-        }
+    if let Some(db_file_name) = utils::parser::parse_single_arg(&args, "--dbfilename") {
+        dbfilename = db_file_name;
     }
+
     // parse replica
-    let _role = if let Some((host, port)) = utils::parser::parse_replica(&args) {
+    let _role = if let Some((host, port)) = utils::parser::parse_multi_arg(&args, "--replicaof") {
         let mut stream = TcpStream::connect(format!("{}:{}", host, port))
         .expect("failed to connect to master server");
 
