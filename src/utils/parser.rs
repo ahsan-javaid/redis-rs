@@ -1,5 +1,4 @@
 use crate::libs::stream_handler::parse_message;
-use crate::libs::stream_handler::read_until_crlf;
 use crate::libs::stream_handler::Message;
 use std::io::Error;
 use std::io::Result;
@@ -24,6 +23,19 @@ pub fn parse_single_arg(args: &[String], arg_name: &str) -> Option<String> {
     args.iter()
         .position(|item| item == arg_name)
         .map(|i| args.get(i + 1).unwrap().clone())
+}
+
+pub fn read_until_crlf(input: String) -> Option<String> {
+  let line = input.lines().next();
+  
+  match line {
+   Some(v) => {
+     return Some(v[1..].into());
+   },
+   None => {
+     return None;
+   }
+  }
 }
 
 pub fn parse_simple_string(input: String) -> Result<Message> {
