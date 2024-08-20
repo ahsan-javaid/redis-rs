@@ -1,8 +1,8 @@
 // You can also organize tests into modules
 mod tests {
   // Import the test module to access the #[test] attribute
-  use crate::libs::stream_handler::read_until_crlf;
-  use crate::libs::stream_handler::parse_message;
+  use crate::utils::parser::read_until_crlf;
+  use crate::utils::parser::parse_message;
 
   // Write more tests
   #[test]
