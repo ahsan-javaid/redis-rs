@@ -1,4 +1,3 @@
-use crate::libs::stream_handler::parse_message;
 use crate::libs::stream_handler::Message;
 use std::io::Error;
 use std::io::Result;
@@ -23,6 +22,15 @@ pub fn parse_single_arg(args: &[String], arg_name: &str) -> Option<String> {
     args.iter()
         .position(|item| item == arg_name)
         .map(|i| args.get(i + 1).unwrap().clone())
+}
+
+pub fn parse_message(input: String) -> Result<Message> {
+    match input.chars().next().unwrap() {
+      '+' => parse_simple_string(input),
+      '*' => parse_array(input),
+      '$' => parse_bulk_string(input),
+      _ => panic!("error parse message: no matcher found!")
+    }
 }
 
 pub fn read_until_crlf(input: String) -> Option<String> {
