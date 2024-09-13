@@ -8,8 +8,6 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime};
 use std::env;
-
-
 fn main() {
     println!("Logs from your program will appear here!");
     // env //
