@@ -187,7 +187,7 @@ impl<'a> StreamHandler <'a> {
         match response {
           Ok(v) => {
             let args: Vec<String> = env::args().collect();
-           
+            println!("all args: {:?}", args);
             let reply = if let Some(_) = args.iter().position(|x| x.contains("replicaof")) {
                "role:slave"
             } else {

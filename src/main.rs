@@ -1,18 +1,18 @@
-use std::{ net::TcpListener, net::TcpStream, io::{Write} };
+use std::{io::Write, net::TcpListener, net::TcpStream};
 mod libs;
-mod utils;
 mod tests;
+mod utils;
 use libs::stream_handler::StreamHandler;
-use std::thread;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use std::time::{SystemTime};
 use std::env;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::SystemTime;
 fn main() {
     println!("Logs from your program will appear here!");
     // env //
     let args: Vec<String> = env::args().collect();
-    
+
     let mut port_num = "6379".to_string();
     let mut dir = "".to_string();
     let mut dbfilename = "".to_string();
@@ -30,11 +30,19 @@ fn main() {
     }
 
     // parse replica
-    let _role = if let Some((host, port)) = utils::parser::parse_multi_arg(&args, "--replicaof") {
-        let mut stream = TcpStream::connect(format!("{}:{}", host, port))
-        .expect("failed to connect to master server");
+    let _role = if let Some(addr) = utils::parser::parse_single_arg(&args, "--replicaof") {
+        let chunk: Vec<&str> = addr.split(' ').collect();
+        let host = chunk.first();
+        let port = chunk.last();
 
-        stream.write_all(b"*1\r\n$4\r\nping\r\n").expect("failed to ping master server");
+        if chunk.len() == 2 && host.is_some() && port.is_some() {
+            let mut stream = TcpStream::connect(format!("{}:{}", host.unwrap(), port.unwrap()))
+                .expect("failed to connect to master server");
+
+            stream
+                .write_all(b"*1\r\n$4\r\nping\r\n")
+                .expect("failed to ping master server");
+        }
 
         "slave"
     } else {
@@ -45,27 +53,24 @@ fn main() {
 
     let config = Arc::new(Mutex::new(HashMap::<String, String>::new()));
 
-    config
-    .lock()
-    .unwrap()
-    .insert("dir".to_string(), dir);
+    config.lock().unwrap().insert("dir".to_string(), dir);
 
     config
-    .lock()
-    .unwrap()
-    .insert("dbfilename".to_string(), dbfilename);
+        .lock()
+        .unwrap()
+        .insert("dbfilename".to_string(), dbfilename);
 
     let bind_address = format!("127.0.0.1:{port_num}");
 
     println!("listening on: {}", bind_address);
 
-    // create a store here 
+    // create a store here
     let hmap: HashMap<String, (String, Option<SystemTime>)> = HashMap::new();
 
     let store = Arc::new(Mutex::new(hmap));
 
     let listener = TcpListener::bind(bind_address).unwrap();
-    
+
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
