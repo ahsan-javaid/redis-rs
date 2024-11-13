@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::{io::Write, net::TcpListener, net::TcpStream};
 mod libs;
 mod tests;
@@ -39,11 +40,58 @@ fn main() {
             let mut stream = TcpStream::connect(format!("{}:{}", host.unwrap(), port.unwrap()))
                 .expect("failed to connect to master server");
 
-            stream
-                .write_all(b"*1\r\n$4\r\nping\r\n")
-                .expect("failed to ping master server");
-        }
+            match stream.write_all(b"*1\r\n$4\r\nping\r\n") {
+                Ok(_) => println!("sent"),
+                Err(e) => eprintln!("Failed to send first message: {}", e),
+            }
 
+            stream.flush();
+
+            // First wait for message from master
+            let mut buffer = [0; 1024];
+            let bytes_read = stream.read(&mut buffer);
+
+            let mut bytes: usize = 0;
+
+            match bytes_read {
+                Ok(value) => {
+                    bytes = value;
+                }
+                Err(_) => {}
+            }
+            println!("Bytes  read {:?}", bytes_read);
+
+            let res = String::from_utf8_lossy(&buffer[..bytes]);
+
+            println!("Final response: {res}");
+
+            let s = format!(
+                "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n{}\r\n",
+                port_num
+            )
+            .as_bytes()
+            .to_vec();
+
+            match stream.write_all(&s) {
+                Ok(_) => println!("sent"),
+                Err(e) => eprintln!("Failed to send first message: {}", e),
+            }
+
+            stream.flush();
+
+            let _ = stream.read(&mut buffer);
+
+            let s = b"*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n";
+
+            match stream.write_all(s) {
+                Ok(_) => println!("sent"),
+                Err(e) => eprintln!("Failed to send first message: {}", e),
+            }
+
+            stream.flush();
+
+            let _ = stream.read(&mut buffer);
+        }
         "slave"
     } else {
         "master"
