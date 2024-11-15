@@ -91,6 +91,16 @@ fn main() {
             stream.flush();
 
             let _ = stream.read(&mut buffer);
+
+            let psync_str =b"*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n";
+            
+            match stream.write_all(psync_str) {
+                Ok(_) => println!("sent"),
+                Err(e) => eprintln!("Failed to send first message: {}", e),
+            }
+            stream.flush();
+            
+            let _ = stream.read(&mut buffer);
         }
         "slave"
     } else {
