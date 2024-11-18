@@ -8,6 +8,8 @@ pub enum RedisCmd {
   GET,
   Info,
   Config,
+  Replconf,
+  Psync,
   Unsupported
 }
 
@@ -27,6 +29,10 @@ impl FromStr for RedisCmd {
       Ok(RedisCmd::Info)
     } else if input.to_lowercase().contains("config") {
         Ok(RedisCmd::Config)  
+    } else if input.to_lowercase().contains("replconf") {
+        Ok(RedisCmd::Replconf)
+    } else if input.to_lowercase().contains("psync") {
+        Ok(RedisCmd::Psync)
     } else {
       Ok(RedisCmd::Unsupported)
     }

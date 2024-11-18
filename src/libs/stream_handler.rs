@@ -182,6 +182,12 @@ impl<'a> StreamHandler <'a> {
           }
         }
        },
+       RedisCmd::Replconf => {
+        self._write("+OK\r\n".to_string());
+       },
+       RedisCmd::Psync => {
+        self._write("+OK\r\n".to_string());
+      },
        RedisCmd::Info => { 
         let response = parse_message(input_value.clone());
         match response {
