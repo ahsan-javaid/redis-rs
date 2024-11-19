@@ -11,6 +11,8 @@ use std::collections::HashMap;
 use std::time::{SystemTime, Duration};
 use std::env;
 
+const DEFAULT_MASTER_REPLID: &str = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
+
 #[derive(Debug, Clone)]
 pub enum Message {
   SimpleString(String),
@@ -186,7 +188,9 @@ impl<'a> StreamHandler <'a> {
         self._write("+OK\r\n".to_string());
        },
        RedisCmd::Psync => {
-        self._write("+OK\r\n".to_string());
+        // self._write("+OK\r\n".to_string());
+        let r = format!("+FULLRESYNC {} 0\r\n", DEFAULT_MASTER_REPLID);
+        self._write(r.to_string());
       },
        RedisCmd::Info => { 
         let response = parse_message(input_value.clone());
