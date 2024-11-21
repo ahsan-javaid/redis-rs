@@ -101,6 +101,7 @@ fn main() {
             stream.flush();
             
             let _ = stream.read(&mut buffer);
+            // let _ = stream.read(&mut buffer);
         }
         "slave"
     } else {
