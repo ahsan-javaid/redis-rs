@@ -188,9 +188,15 @@ impl<'a> StreamHandler <'a> {
         self._write("+OK\r\n".to_string());
        },
        RedisCmd::Psync => {
-        // self._write("+OK\r\n".to_string());
         let r = format!("+FULLRESYNC {} 0\r\n", DEFAULT_MASTER_REPLID);
         self._write(r.to_string());
+
+        // send rdb file
+        let empty_file_payload = hex::decode("524544495330303131fa0972656469732d76657205372e322e30fa0a72656469732d62697473c040fa056374696d65c26d08bc65fa08757365642d6d656dc2b0c41000fa08616f662d62617365c000fff06e3bfec0ff5aa2").unwrap();
+       
+        self.writer.write_all(format!("${}\r\n", empty_file_payload.len()).as_bytes()).unwrap();
+        self.writer.write_all(empty_file_payload.as_slice()).unwrap();
+        self.writer.flush().unwrap();
       },
        RedisCmd::Info => { 
         let response = parse_message(input_value.clone());
