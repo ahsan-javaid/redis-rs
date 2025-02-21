@@ -3,9 +3,8 @@ use crate::utils::parser::{ parse_message };
 use std:: {
   io:: { BufRead, BufReader, BufWriter, Result, Write },
   net:: { TcpStream },
-  str:: FromStr, hash::Hash,
+  str:: FromStr,
 };
-use std::io::Error;
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use std::time::{SystemTime, Duration};
